@@ -1,161 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-    <title>彬界简易修仙传</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《彬》《天彬》简易修仙传 -文天玩WenTianPlay -文天玩网络科技有限公司</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
-        .status { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
-        .action { margin: 10px 0; }
-        button { padding: 5px 10px; margin: 2px; cursor: pointer; }
-        .log { border: 1px solid #ddd; height: 200px; overflow-y: auto; padding: 10px; }
+        body {
+            font-family: "楷体", cursive;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        #game {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 2px solid #4a4a4a;
+            padding: 20px;
+            border-radius: 10px;
+            background: #1a1a1a;
+        }
+        .button {
+            margin: 10px 5px;
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .realm-info {
+            font-size: 1.2em;
+            margin: 15px 0;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>彬界简易修仙传</h1>
-        <div class="status">
-            境界：<span id="level">凡人</span><br>
-            修为：<span id="cultivation">0</span>/100<br>
-            灵石：<span id="money">100</span><br>
-            气血：<span id="hp">100</span>/100
-        </div>
+    <div id="game">
+        <h1 style="text-align: center; color: #4CAF50;">天彬世界</h1>
         
-        <div class="actions">
-            <button onclick="cultivate()">打坐修炼</button>
-            <button onclick="hunt()">猎杀妖兽</button>
-            <button onclick="alchemy()">炼制丹药</button>
-            <button onclick="shop()">坊市交易</button>
+        <div class="realm-info">
+            <h2>你的境界: <span id="playerLevel">炼气一层</span></h2>
+            <h2>对手境界: <span id="enemyLevel">炼气一层</span></h2>
         </div>
 
-        <h3>修炼日志</h3>
-        <div class="log" id="log"></div>
+        <div style="text-align: center;">
+            <button class="button" id="attackButton">发起挑战</button>
+            <button class="button" id="restartButton">轮回重修</button>
+            <button class="button" id="saveButton">闭关存檔</button>
+        </div>
     </div>
 
     <script>
-        let gameState = {
-            level: 0,
-            cultivation: 0,
-            money: 100,
-            hp: 100,
-            stages: ['凡人', '炼气', '筑基', '金丹', '元婴', '化神'],
-            autoCultivate: false
-        };
+        const cultivationRealms = [
+            { name: '凡人', levels: 3 },
+            { name: '炼气', levels: 9 },
+            { name: '筑基', levels: 3 },
+            { name: '金丹', levels: 3 },
+            { name: '元婴', levels: 3 },
+            { name: '化神', levels: 3 },
+            { name: '合体', levels: 3 },
+            { name: '大乘', levels: 3 },
+            { name: '渡劫', levels: 9 },
+            { name: '真仙', levels: Infinity }
+        ];
+
+        let playerLevel = 4;  // 初始为炼气一层（凡人3层+1）
+        let enemyLevel = 4;
+
+        function getRealmInfo(level) {
+            let accumulated = 0;
+            for (const realm of cultivationRealms) {
+                const realmLimit = accumulated + realm.levels;
+                if (level <= realmLimit || realm.levels === Infinity) {
+                    return {
+                        name: realm.name,
+                        layer: Math.min(level - accumulated, realm.levels),
+                        isMax: realm.levels === Infinity
+                    };
+                }
+                accumulated += realm.levels;
+            }
+            return { name: '未知', layer: 0 };
+        }
+
+        function updateDisplay() {
+            const player = getRealmInfo(playerLevel);
+            const enemy = getRealmInfo(enemyLevel);
+            
+            let playerText = player.isMax ? 
+                `${player.name}（${player.layer}重天）` : 
+                `${player.name} ${player.layer}层`;
+            
+            let enemyText = enemy.isMax ? 
+                `${enemy.name}（${enemy.layer}重天）` : 
+                `${enemy.name} ${enemy.layer}层`;
+
+            document.getElementById('playerLevel').textContent = playerText;
+            document.getElementById('enemyLevel').textContent = enemyText;
+        }
+
+        function challenge() {
+            const successChance = playerLevel / (playerLevel + enemyLevel);
+            if (Math.random() < successChance) {
+                playerLevel += Math.ceil(enemyLevel * 0.2);
+                enemyLevel = Math.floor(playerLevel * (1 + Math.random()));
+                alert("✨ 突破成功！吸收对手修为精进！");
+            } else {
+                playerLevel = Math.max(1, playerLevel - 1);
+                alert("💥 渡劫失败！修为受损！");
+            }
+            updateDisplay();
+        }
+
+        function restart() {
+            playerLevel = 4;
+            enemyLevel = 4;
+            updateDisplay();
+            alert("㊙️ 兵解转世，重入轮回！");
+        }
+
+        function saveProgress() {
+            localStorage.setItem('playerCultivation', playerLevel);
+            localStorage.setItem('enemyCultivation', enemyLevel);
+            alert("💾 将当前修为封入玉简！");
+        }
+
+        function loadProgress() {
+            const savedPlayer = localStorage.getItem('playerCultivation');
+            const savedEnemy = localStorage.getItem('enemyCultivation');
+            if (savedPlayer) playerLevel = parseInt(savedPlayer);
+            if (savedEnemy) enemyLevel = parseInt(savedEnemy);
+            updateDisplay();
+        }
+
+        // 初始化事件监听
+        document.getElementById('attackButton').addEventListener('click', challenge);
+        document.getElementById('restartButton').addEventListener('click', restart);
+        document.getElementById('saveButton').addEventListener('click', saveProgress);
 
         // 加载存档
-        function loadGame() {
-            let saved = localStorage.getItem('cultivationGame');
-            if(saved) gameState = JSON.parse(saved);
-            updateDisplay();
-        }
-
-        // 保存存档
-        function saveGame() {
-            localStorage.setItem('cultivationGame', JSON.stringify(gameState));
-        }
-
-        // 更新显示
-        function updateDisplay() {
-            document.getElementById('level').textContent = gameState.stages[gameState.level];
-            document.getElementById('cultivation').textContent = gameState.cultivation;
-            document.getElementById('money').textContent = gameState.money;
-            document.getElementById('hp').textContent = gameState.hp;
-        }
-
-        // 添加日志
-        function addLog(text) {
-            let log = document.getElementById('log');
-            log.innerHTML += `[${new Date().toLocaleTimeString()}] ${text}<br>`;
-            log.scrollTop = log.scrollHeight;
-        }
-
-        // 修炼
-        function cultivate() {
-            if(gameState.autoCultivate) {
-                gameState.autoCultivate = false;
-                addLog("停止自动修炼");
-                return;
-            }
-
-            let gain = Math.floor(Math.random() * 5) + 3;
-            gameState.cultivation += gain;
-            addLog(`修炼获得 ${gain} 点修为`);
-
-            if(gameState.cultivation >= 100) {
-                gameState.level++;
-                gameState.cultivation = 0;
-                addLog(`突破成功！当前境界：${gameState.stages[gameState.level]}`);
-            }
-
-            updateDisplay();
-            saveGame();
-        }
-
-        // 战斗
-        function hunt() {
-            if(gameState.hp <= 0) {
-                addLog("需要恢复气血才能战斗");
-                return;
-            }
-
-            let enemyHP = Math.floor(Math.random() * 50) + 20;
-            let damage = Math.floor(Math.random() * 15) + 5;
-            
-            gameState.hp -= damage;
-            let moneyGain = Math.floor(Math.random() * 50) + 20;
-            gameState.money += moneyGain;
-            
-            addLog(`战胜妖兽！获得 ${moneyGain} 灵石，受到 ${damage} 点伤害`);
-            
-            if(gameState.hp <= 0) {
-                addLog("重伤昏迷，修为受损！");
-                gameState.cultivation = Math.max(0, gameState.cultivation - 20);
-            }
-            
-            updateDisplay();
-            saveGame();
-        }
-
-        // 炼丹
-        function alchemy() {
-            if(gameState.money < 50) {
-                addLog("灵石不足无法炼丹");
-                return;
-            }
-            
-            gameState.money -= 50;
-            let success = Math.random() < 0.6;
-            
-            if(success) {
-                let pill = Math.floor(Math.random() * 3) + 1;
-                gameState.cultivation += pill * 10;
-                addLog(`成功炼制${pill}品丹药，修为大增！`);
-            } else {
-                addLog("炼丹失败，材料尽毁");
-            }
-            
-            updateDisplay();
-            saveGame();
-        }
-
-        // 商店
-        function shop() {
-            if(confirm("花费100灵石购买回春丹？（恢复全部气血）")) {
-                if(gameState.money >= 100) {
-                    gameState.money -= 100;
-                    gameState.hp = 100;
-                    addLog("购买回春丹，气血完全恢复");
-                    updateDisplay();
-                    saveGame();
-                } else {
-                    addLog("灵石不足无法购买");
-                }
-            }
-        }
-
-        // 自动保存
-        setInterval(saveGame, 60000);
-        loadGame();
+        window.addEventListener('load', loadProgress);
     </script>
 </body>
 </html>
