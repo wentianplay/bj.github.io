@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>彬界简易修仙传</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
+        .status { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
+        .action { margin: 10px 0; }
+        button { padding: 5px 10px; margin: 2px; cursor: pointer; }
+        .log { border: 1px solid #ddd; height: 200px; overflow-y: auto; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>彬界简易修仙传</h1>
+        <div class="status">
+            境界：<span id="level">凡人</span><br>
+            修为：<span id="cultivation">0</span>/100<br>
+            灵石：<span id="money">100</span><br>
+            气血：<span id="hp">100</span>/100
+        </div>
+        
+        <div class="actions">
+            <button onclick="cultivate()">打坐修炼</button>
+            <button onclick="hunt()">猎杀妖兽</button>
+            <button onclick="alchemy()">炼制丹药</button>
+            <button onclick="shop()">坊市交易</button>
+        </div>
+
+        <h3>修炼日志</h3>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 0,
+            cultivation: 0,
+            money: 100,
+            hp: 100,
+            stages: ['凡人', '炼气', '筑基', '金丹', '元婴', '化神'],
+            autoCultivate: false
+        };
+
+        // 加载存档
+        function loadGame() {
+            let saved = localStorage.getItem('cultivationGame');
+            if(saved) gameState = JSON.parse(saved);
+            updateDisplay();
+        }
+
+        // 保存存档
+        function saveGame() {
+            localStorage.setItem('cultivationGame', JSON.stringify(gameState));
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.stages[gameState.level];
+            document.getElementById('cultivation').textContent = gameState.cultivation;
+            document.getElementById('money').textContent = gameState.money;
+            document.getElementById('hp').textContent = gameState.hp;
+        }
+
+        // 添加日志
+        function addLog(text) {
+            let log = document.getElementById('log');
+            log.innerHTML += `[${new Date().toLocaleTimeString()}] ${text}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 修炼
+        function cultivate() {
+            if(gameState.autoCultivate) {
+                gameState.autoCultivate = false;
+                addLog("停止自动修炼");
+                return;
+            }
+
+            let gain = Math.floor(Math.random() * 5) + 3;
+            gameState.cultivation += gain;
+            addLog(`修炼获得 ${gain} 点修为`);
+
+            if(gameState.cultivation >= 100) {
+                gameState.level++;
+                gameState.cultivation = 0;
+                addLog(`突破成功！当前境界：${gameState.stages[gameState.level]}`);
+            }
+
+            updateDisplay();
+            saveGame();
+        }
+
+        // 战斗
+        function hunt() {
+            if(gameState.hp <= 0) {
+                addLog("需要恢复气血才能战斗");
+                return;
+            }
+
+            let enemyHP = Math.floor(Math.random() * 50) + 20;
+            let damage = Math.floor(Math.random() * 15) + 5;
+            
+            gameState.hp -= damage;
+            let moneyGain = Math.floor(Math.random() * 50) + 20;
+            gameState.money += moneyGain;
+            
+            addLog(`战胜妖兽！获得 ${moneyGain} 灵石，受到 ${damage} 点伤害`);
+            
+            if(gameState.hp <= 0) {
+                addLog("重伤昏迷，修为受损！");
+                gameState.cultivation = Math.max(0, gameState.cultivation - 20);
+            }
+            
+            updateDisplay();
+            saveGame();
+        }
+
+        // 炼丹
+        function alchemy() {
+            if(gameState.money < 50) {
+                addLog("灵石不足无法炼丹");
+                return;
+            }
+            
+            gameState.money -= 50;
+            let success = Math.random() < 0.6;
+            
+            if(success) {
+                let pill = Math.floor(Math.random() * 3) + 1;
+                gameState.cultivation += pill * 10;
+                addLog(`成功炼制${pill}品丹药，修为大增！`);
+            } else {
+                addLog("炼丹失败，材料尽毁");
+            }
+            
+            updateDisplay();
+            saveGame();
+        }
+
+        // 商店
+        function shop() {
+            if(confirm("花费100灵石购买回春丹？（恢复全部气血）")) {
+                if(gameState.money >= 100) {
+                    gameState.money -= 100;
+                    gameState.hp = 100;
+                    addLog("购买回春丹，气血完全恢复");
+                    updateDisplay();
+                    saveGame();
+                } else {
+                    addLog("灵石不足无法购买");
+                }
+            }
+        }
+
+        // 自动保存
+        setInterval(saveGame, 60000);
+        loadGame();
+    </script>
+</body>
+</html>
